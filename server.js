@@ -1,14 +1,31 @@
 const express = require('express');
 const app = express();
+require('dotenv').config();
 const db = require('./db')
+//how to use body parser
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
-const personRoutes = require('./routes/personRoutes');
-const menuItemRoutes = require('./routes/menuItemRoutes')
+
+
+const passport = require('./auth');
 
 
 
 
+app.use(passport.initialize());
+const localAuthMiddleWare = passport.authenticate('local',{session:false});
+
+
+
+
+
+
+//logRequest middleware  perfect example of how to use middleware
+const logRequest = (req,res,next)=>{
+  console.log(`[${new Date().toLocaleString()}] Request made to : ${req.originalUrl}`);
+  next();
+}
+app.use(logRequest);
 
 
 //home page
@@ -17,16 +34,22 @@ app.get('/',(req,res)=>{
 })
 
 
+
+
+//import roters
+const personRoutes = require('./routes/personRoutes');
+const menuItemRoutes = require('./routes/menuItemRoutes')
 //routes
-app.use('/person',personRoutes);
+app.use('/person',localAuthMiddleWare,personRoutes);
 app.use('/menuItems',menuItemRoutes);
 
 
 
 
-
-app.listen(3000,()=>{
-  console.log("server is running on port no: 3000");
+//how to make serve listen at specific port
+const PORT = process.env.PORT || 3000
+app.listen(PORT,()=>{
+  console.log("server is running on port no:",PORT);
 });
   
 
